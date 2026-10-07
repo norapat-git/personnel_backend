@@ -61,7 +61,7 @@ const personnelManageController = {
       );
 
       const sql = `
-        INSERT INTO PERSON01.PERSON_PAYROLL_OUT (
+        INSERT INTO PERSON_PAYROLL_OUT (
           PER_CITIZEN_ID, TYPE_CODE, TYPE_NAME, PER_SLIP_ID, PER_POS_ID, PRE_CODE, PRE_NAME,
           PER_NAME_TH, PER_NAME_EN, PER_TAX_ID, PER_PVDF_APP, PER_PVDF_APP_D, PER_PVDF_QUIT, PER_PVDF_QUIT_D,
           PER_FUND_TYPE, PER_SAVE_RATE, PER_SSO_PAYMENT, PER_FUND_TEACHER, PER_FUND_ASSTEACHER, PER_SSO_ID,
@@ -138,7 +138,7 @@ const personnelManageController = {
         if (finalNotePvd) {
           try {
             const sqlHist = `
-              INSERT INTO PERSON01.PERSON_PAYROLL_OUT_UPD_HIST (
+              INSERT INTO PERSON_PAYROLL_OUT_UPD_HIST (
                 PER_CITIZEN_ID, TYPE_CODE, TYPE_NAME, PER_SLIP_ID, PER_POS_ID, PRE_CODE, PRE_NAME,
                 PER_NAME_TH, PER_NAME_EN, PER_TAX_ID, PER_PVDF_APP, PER_PVDF_APP_D, PER_PVDF_QUIT, PER_PVDF_QUIT_D,
                 PER_FUND_TYPE, PER_SAVE_RATE, PER_SSO_PAYMENT, PER_FUND_TEACHER, PER_FUND_ASSTEACHER, PER_SSO_ID,
@@ -258,7 +258,7 @@ const personnelManageController = {
       const result = await DbTx.withTransaction(async (connection) => {
         //บันทึกข้อมูลเดิมลงในตารางประวัติ Backup พร้อม NOTE_PVD
         const sqlBackup = `
-          INSERT INTO PERSON01.PERSON_PAYROLL_OUT_UPD_HIST (
+          INSERT INTO PERSON_PAYROLL_OUT_UPD_HIST (
             PER_CITIZEN_ID, TYPE_CODE, TYPE_NAME, PER_SLIP_ID, PER_POS_ID, PRE_CODE, PRE_NAME,
             PER_NAME_TH, PER_NAME_EN, PER_TAX_ID, PER_PVDF_APP, PER_PVDF_APP_D, PER_PVDF_QUIT, PER_PVDF_QUIT_D,
             PER_FUND_TYPE, PER_SAVE_RATE, PER_SSO_PAYMENT, PER_FUND_TEACHER, PER_FUND_ASSTEACHER, PER_SSO_ID,
@@ -277,7 +277,7 @@ const personnelManageController = {
             PER_POSITION_MONEY, PER_POSITION_PAY, PER_POSITION_MONEY_EX, PER_POSITION_PAY_EX, PER_PROJECT,
             CREATED_DATE, CREATED_BY, UPDATED_DATE, UPDATED_BY,
             :notePvd, :histBy, 'U'
-          FROM PERSON01.PERSON_PAYROLL_OUT 
+          FROM PERSON_PAYROLL_OUT 
           WHERE (PER_CITIZEN_ID IS NOT NULL AND TRIM(PER_CITIZEN_ID) = TRIM(:targetCitizenId))
              OR (PER_CITIZEN_ID IS NULL AND UPPER(TRIM(PER_PASSPORT_NO)) = UPPER(TRIM(:targetPassportNo)))
         `;
@@ -299,7 +299,7 @@ const personnelManageController = {
 
         // อัปเดตข้อมูลหลักในตารางหลัก
         const sqlUpdate = `
-          UPDATE PERSON01.PERSON_PAYROLL_OUT 
+          UPDATE PERSON_PAYROLL_OUT 
           SET 
             PER_CITIZEN_ID = :perCitizenId, TYPE_CODE = :typeCode, TYPE_NAME = :typeName, PER_SLIP_ID = :perSlipId, 
             PER_POS_ID = :perPosId, PRE_CODE = :preCode, PRE_NAME = :preName,
@@ -419,7 +419,7 @@ const personnelManageController = {
       const result = await DbTx.withTransaction(async (connection) => {
         //บันทึกข้อมูลที่จะลบลงในตารางประวัติ Backup พร้อม NOTE_DEL
         const sqlBackup = `
-          INSERT INTO PERSON01.PERSON_PAYROLL_OUT_DEL_HIST (
+          INSERT INTO PERSON_PAYROLL_OUT_DEL_HIST (
             PER_CITIZEN_ID, TYPE_CODE, TYPE_NAME, PER_SLIP_ID, PER_POS_ID, PRE_CODE, PRE_NAME,
             PER_NAME_TH, PER_NAME_EN, PER_TAX_ID, PER_PVDF_APP, PER_PVDF_APP_D, PER_PVDF_QUIT, PER_PVDF_QUIT_D,
             PER_FUND_TYPE, PER_SAVE_RATE, PER_SSO_PAYMENT, PER_FUND_TEACHER, PER_FUND_ASSTEACHER, PER_SSO_ID,
@@ -438,7 +438,7 @@ const personnelManageController = {
             PER_POSITION_MONEY, PER_POSITION_PAY, PER_POSITION_MONEY_EX, PER_POSITION_PAY_EX, PER_PROJECT,
             CREATED_DATE, CREATED_BY, UPDATED_DATE, UPDATED_BY,
             :noteDel, :histBy, 'D'
-          FROM PERSON01.PERSON_PAYROLL_OUT 
+          FROM PERSON_PAYROLL_OUT 
           WHERE (PER_CITIZEN_ID IS NOT NULL AND TRIM(PER_CITIZEN_ID) = TRIM(:targetId))
              OR (PER_CITIZEN_ID IS NULL AND UPPER(TRIM(PER_PASSPORT_NO)) = UPPER(TRIM(:targetId)))
         `;
@@ -455,7 +455,7 @@ const personnelManageController = {
 
         // ลบข้อมูลจริงออกจากตารางหลัก
         const sqlDelete = `
-          DELETE FROM PERSON01.PERSON_PAYROLL_OUT 
+          DELETE FROM PERSON_PAYROLL_OUT 
           WHERE (PER_CITIZEN_ID IS NOT NULL AND TRIM(PER_CITIZEN_ID) = TRIM(:targetId))
              OR (PER_CITIZEN_ID IS NULL AND UPPER(TRIM(PER_PASSPORT_NO)) = UPPER(TRIM(:targetId)))
         `;

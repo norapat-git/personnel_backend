@@ -22,7 +22,7 @@ const personnelMasterController = {
   // Get all prenames for dropdown
   async getPrenames(req, res) {
     try {
-      const sql = `SELECT PRE_CODE, PRE_NAME, PRE_NAME2, PRE_NAME_EN, PRE_NAME_IDCARD FROM NORAPAT.PRENAME_CODE ORDER BY PRE_CODE ASC`;
+      const sql = `SELECT PRE_CODE, PRE_NAME, PRE_NAME2, PRE_NAME_EN FROM PRENAME_CODE ORDER BY PRE_CODE ASC`;
       const result = await ModelSelect.findAll(res, sql, {});
       if (result === null) {
         return res.status(500).json({ success: false, message: "ไม่สามารถดึงข้อมูลคำนำหน้าชื่อได้" });
@@ -40,7 +40,7 @@ const personnelMasterController = {
   // Get all person types for dropdown
   async getPersonTypes(req, res) {
     try {
-      const sql = `SELECT TYPE_CODE, TYPE_NAME, TYPE_NAME2 FROM NORAPAT.PERSONTYPE ORDER BY TYPE_CODE ASC`;
+      const sql = `SELECT TYPE_CODE, TYPE_NAME, TYPE_NAME2 FROM PERSONTYPE ORDER BY TYPE_CODE ASC`;
       const result = await ModelSelect.findAll(res, sql, {});
       if (result === null) {
         return res.status(500).json({ success: false, message: "ไม่สามารถดึงข้อมูลประเภทบุคลากรได้" });
@@ -58,7 +58,7 @@ const personnelMasterController = {
   // Get all fund types for dropdown 
   async getFundTypes(req, res) {
     try {
-      const sql = `SELECT FUND_CODE, FUND_NAME FROM NORAPAT.FUND_TYPE ORDER BY FUND_CODE ASC`;
+      const sql = `SELECT FUND_CODE, FUND_NAME FROM FUND_TYPE ORDER BY FUND_CODE ASC`;
       const result = await ModelSelect.findAll(res, sql, {});
       if (result === null) {
         return res.status(500).json({ success: false, message: "ไม่สามารถดึงข้อมูลประเภทกองทุนได้" });
@@ -76,7 +76,7 @@ const personnelMasterController = {
   // Get all project types for dropdown
   async getProjectTypes(req, res) {
     try {
-      const sql = `SELECT PRO_CODE, PRO_NAME FROM NORAPAT.PROJECT_TYPE ORDER BY PRO_CODE ASC`;
+      const sql = `SELECT PRO_CODE, PRO_NAME FROM PROJECT_TYPE ORDER BY PRO_CODE ASC`;
       const result = await ModelSelect.findAll(res, sql, {});
       if (result === null) {
         return res.status(500).json({ success: false, message: "ไม่สามารถดึงข้อมูลประเภทโครงการได้" });
@@ -94,7 +94,7 @@ const personnelMasterController = {
   // Get all source money types for dropdown
   async getSourceMoneyTypes(req, res) {
     try {
-      const sql = `SELECT SM_CODE, SM_NAME FROM NORAPAT.SOURCE_MONEY ORDER BY SM_CODE ASC`;
+      const sql = `SELECT SM_CODE, SM_NAME FROM SOURCE_MONEY ORDER BY SM_CODE ASC`;
       console.log("getSourceMoneyTypes Sql: ", sql);
       const result = await ModelSelect.findAll(res, sql, {});
       if (result === null) {
