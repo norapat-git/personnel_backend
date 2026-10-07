@@ -4,7 +4,7 @@ const ModelInsert = require("../../models/db/InsertModel.js");
 const ModelUpdate = require("../../models/db/UpDateModel");
 const ModelDelete = require("../../models/db/DeleteModel");
 const DbTx = require("../../models/db/DbTxModel");
-const { formatDateBind, parseNum, parseStr, parseStrBytes } = require("./personnelHelper");
+const { formatDateBind, parseNum, parseStr, parseStrBytes, getThaiDateTimeStr } = require("./personnelHelper");
 
 const personnelManageController = {
   // func save ข้อมูล
@@ -56,8 +56,9 @@ const personnelManageController = {
       const finalNotePvd = parseStrBytes(rawNotePvd, 20);
       const actionUser = parseStr(req.decoded?.client_id || req.body?.createdBy || req.body?.CREATED_BY || 'SYSTEM', 50);
 
+      const thaiNow = getThaiDateTimeStr();
       console.log(
-        `[Backend] กำลังทำคำสั่งบันทึกข้อมูลแบบรายละเอียดเข้าตาราง PERSON_PAYROLL_OUT (ผู้ทำรายการ: ${actionUser})`,
+        `[Backend] กำลังทำคำสั่งบันทึกข้อมูลแบบรายละเอียดเข้าตาราง PERSON_PAYROLL_OUT (ผู้ทำรายการ: ${actionUser}, เวลาไทย: ${thaiNow})`,
       );
 
       const sql = `
@@ -84,7 +85,7 @@ const personnelManageController = {
           :facName, :perSalary, :perHoldSalary, :perSourceMoney,
           :perPositionMoney, :perPositionPay, :perPositionMoneyEx, :perPositionPayEx, :perProject,
           :fRevSalary, :fRevPosMoney, :fRevPayEx, :fTotalIncome,
-          SYSDATE, :createdBy
+          TO_DATE(:thaiNow, 'YYYY-MM-DD HH24:MI:SS'), :createdBy
         )
       `;
 
@@ -128,6 +129,7 @@ const personnelManageController = {
         fRevPayEx: parseStr(fRevPayEx || 'N', 1),
         fTotalIncome: parseStr(fTotalIncome || 'N', 1),
         createdBy: actionUser,
+        thaiNow: thaiNow,
       };
 
       console.log("SQL Binds:", binds);
@@ -160,11 +162,11 @@ const personnelManageController = {
                 :poscName, :perFacC,
                 :facName, :perSalary, :perHoldSalary, :perSourceMoney,
                 :perPositionMoney, :perPositionPay, :perPositionMoneyEx, :perPositionPayEx, :perProject,
-                SYSDATE, :createdBy, SYSDATE, :createdBy,
+                TO_DATE(:thaiNow, 'YYYY-MM-DD HH24:MI:SS'), :createdBy, TO_DATE(:thaiNow, 'YYYY-MM-DD HH24:MI:SS'), :createdBy,
                 :notePvd, :histBy, 'I'
               )
             `;
-            await ModelInsert.insertdb(res, sqlHist, { ...binds, notePvd: finalNotePvd, histBy: actionUser });
+            await ModelInsert.insertdb(res, sqlHist, { ...binds, thaiNow: thaiNow, notePvd: finalNotePvd, histBy: actionUser });
           } catch (histErr) {
             console.error("Insert Hist NotePvd error:", histErr);
           }
@@ -251,8 +253,9 @@ const personnelManageController = {
         return res.status(400).json({ success: false, message: "Invalid input data: perCitizenId or perPassportNo is required to identify the record" });
       }
 
+      const thaiNow = getThaiDateTimeStr();
       console.log(
-        `[Backend] กำลังแก้ไขข้อมูลบุคลากร คีย์หลักเดิม CitizenID: ${targetCitizenId || 'null'}, PassportNo: ${targetPassportNo || 'null'} (ผู้แก้ไข: ${actionUser})`,
+        `[Backend] กำลังแก้ไขข้อมูลบุคลากร คีย์หลักเดิม CitizenID: ${targetCitizenId || 'null'}, PassportNo: ${targetPassportNo || 'null'} (ผู้แก้ไข: ${actionUser}, เวลาไทย: ${thaiNow})`,
       );
 
       const result = await DbTx.withTransaction(async (connection) => {
@@ -275,7 +278,7 @@ const personnelManageController = {
             PER_PASSPORT_NO, PER_PASSPORT_START_D, PER_PASSPORT_EXPIRE_D, POSC_NAME, PER_FAC_C,
             FAC_NAME, PER_SALARY, PER_HOLD_SALARY, PER_SOURCE_MONEY,
             PER_POSITION_MONEY, PER_POSITION_PAY, PER_POSITION_MONEY_EX, PER_POSITION_PAY_EX, PER_PROJECT,
-            CREATED_DATE, CREATED_BY, UPDATED_DATE, UPDATED_BY,
+            CREATED_DATE, CREATED_BY, TO_DATE(:thaiNow, 'YYYY-MM-DD HH24:MI:SS'), :histBy,
             :notePvd, :histBy, 'U'
           FROM PERSON_PAYROLL_OUT 
           WHERE (PER_CITIZEN_ID IS NOT NULL AND TRIM(PER_CITIZEN_ID) = TRIM(:targetCitizenId))
@@ -287,6 +290,7 @@ const personnelManageController = {
           { 
             targetCitizenId: targetCitizenId || null,
             targetPassportNo: targetPassportNo || null,
+            thaiNow: thaiNow,
             notePvd: finalNotePvd,
             histBy: actionUser
           },
@@ -323,7 +327,7 @@ const personnelManageController = {
             F_REV_POS_MONEY = :fRevPosMoney,
             F_REV_PAY_EX = :fRevPayEx,
             F_TOTAL_INCOME = :fTotalIncome,
-            UPDATED_DATE = SYSDATE, UPDATED_BY = :updatedBy
+            UPDATED_DATE = TO_DATE(:thaiNow, 'YYYY-MM-DD HH24:MI:SS'), UPDATED_BY = :updatedBy
           WHERE (PER_CITIZEN_ID IS NOT NULL AND TRIM(PER_CITIZEN_ID) = TRIM(:targetCitizenId))
              OR (PER_CITIZEN_ID IS NULL AND UPPER(TRIM(PER_PASSPORT_NO)) = UPPER(TRIM(:targetPassportNo)))
         `;
@@ -370,6 +374,7 @@ const personnelManageController = {
           targetCitizenId: targetCitizenId || null,
           targetPassportNo: targetPassportNo || null,
           updatedBy: actionUser,
+          thaiNow: thaiNow,
         };
 
         const resultUpdate = await connection.execute(
@@ -416,6 +421,7 @@ const personnelManageController = {
       const finalNoteDel = String(noteDel).trim().substring(0, 20);
       const actionUser = parseStr(req.decoded?.client_id || req.body?.updatedBy || req.body?.UPDATED_BY || req.query?.updatedBy || 'SYSTEM', 50);
 
+      const thaiNow = getThaiDateTimeStr();
       const result = await DbTx.withTransaction(async (connection) => {
         //บันทึกข้อมูลที่จะลบลงในตารางประวัติ Backup พร้อม NOTE_DEL
         const sqlBackup = `
@@ -436,7 +442,7 @@ const personnelManageController = {
             PER_PASSPORT_NO, PER_PASSPORT_START_D, PER_PASSPORT_EXPIRE_D, POSC_NAME, PER_FAC_C,
             FAC_NAME, PER_SALARY, PER_HOLD_SALARY, PER_SOURCE_MONEY,
             PER_POSITION_MONEY, PER_POSITION_PAY, PER_POSITION_MONEY_EX, PER_POSITION_PAY_EX, PER_PROJECT,
-            CREATED_DATE, CREATED_BY, UPDATED_DATE, UPDATED_BY,
+            CREATED_DATE, CREATED_BY, TO_DATE(:thaiNow, 'YYYY-MM-DD HH24:MI:SS'), :histBy,
             :noteDel, :histBy, 'D'
           FROM PERSON_PAYROLL_OUT 
           WHERE (PER_CITIZEN_ID IS NOT NULL AND TRIM(PER_CITIZEN_ID) = TRIM(:targetId))
@@ -445,7 +451,7 @@ const personnelManageController = {
 
         const resultBackup = await connection.execute(
           sqlBackup,
-          { targetId: id, noteDel: finalNoteDel, histBy: actionUser },
+          { targetId: id, thaiNow: thaiNow, noteDel: finalNoteDel, histBy: actionUser },
           { outFormat: oracledb.OUT_FORMAT_OBJECT }
         );
 
