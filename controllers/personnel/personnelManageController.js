@@ -133,61 +133,60 @@ const personnelManageController = {
       };
 
       console.log("SQL Binds:", binds);
-      const isSuccess = await ModelInsert.insertdb(res, sql, binds);
 
-      if (isSuccess) {
+      const result = await DbTx.withTransaction(async (connection) => {
+        const resultInsert = await connection.execute(sql, binds, { outFormat: oracledb.OUT_FORMAT_OBJECT });
+        if (!resultInsert || resultInsert.rowsAffected === 0) {
+          throw new Error("ไม่สามารถบันทึกข้อมูลบุคลากรได้ กรุณาตรวจสอบข้อมูลอีกครั้ง");
+        }
+
         // หากผู้ใช้ระบุ notePvd ในแบบฟอร์ม ให้บันทึกลงตารางประวัติ UPD_HIST ด้วย
         if (finalNotePvd) {
-          try {
-            const sqlHist = `
-              INSERT INTO PERSON_PAYROLL_OUT_UPD_HIST (
-                PER_CITIZEN_ID, TYPE_CODE, TYPE_NAME, PER_SLIP_ID, PER_POS_ID, PRE_CODE, PRE_NAME,
-                PER_NAME_TH, PER_NAME_EN, PER_TAX_ID, PER_PVDF_APP, PER_PVDF_APP_D, PER_PVDF_QUIT, PER_PVDF_QUIT_D,
-                PER_FUND_TYPE, PER_SAVE_RATE, PER_SSO_PAYMENT, PER_FUND_TEACHER, PER_FUND_ASSTEACHER, PER_SSO_ID,
-                PER_PASSPORT_NO, PER_PASSPORT_START_D, PER_PASSPORT_EXPIRE_D, POSC_NAME, PER_FAC_C,
-                FAC_NAME, PER_SALARY, PER_HOLD_SALARY, PER_SOURCE_MONEY,
-                PER_POSITION_MONEY, PER_POSITION_PAY, PER_POSITION_MONEY_EX, PER_POSITION_PAY_EX, PER_PROJECT,
-                CREATED_DATE, CREATED_BY, UPDATED_DATE, UPDATED_BY,
-                NOTE_PVD, HIST_BY, FLAG
-              ) VALUES (
-                :perCitizenId, :typeCode, :typeName, :perSlipId, :perPosId, :preCode, :preName,
-                :perNameTh, :perNameEn, :perTaxId, :perPvdfApp, 
-                TO_DATE(:perPvdfAppD, 'YYYY-MM-DD'), 
-                :perPvdfQuit, 
-                TO_DATE(:perPvdfQuitD, 'YYYY-MM-DD'),
-                :perFundType, :perSaveRate, :perSsoPayment, :perFundTeacher, :perFundAssteacher, :perSsoId,
-                :perPassportNo, 
-                TO_DATE(:perPassportStartD, 'YYYY-MM-DD'), 
-                TO_DATE(:perPassportExpireD, 'YYYY-MM-DD'), 
-                :poscName, :perFacC,
-                :facName, :perSalary, :perHoldSalary, :perSourceMoney,
-                :perPositionMoney, :perPositionPay, :perPositionMoneyEx, :perPositionPayEx, :perProject,
-                TO_DATE(:thaiNow, 'YYYY-MM-DD HH24:MI:SS'), :createdBy, TO_DATE(:thaiNow, 'YYYY-MM-DD HH24:MI:SS'), :createdBy,
-                :notePvd, :histBy, 'I'
-              )
-            `;
-            await ModelInsert.insertdb(res, sqlHist, { ...binds, thaiNow: thaiNow, notePvd: finalNotePvd, histBy: actionUser });
-          } catch (histErr) {
-            console.error("Insert Hist NotePvd error:", histErr);
-          }
+          const sqlHist = `
+            INSERT INTO PERSON_PAYROLL_OUT_UPD_HIST (
+              PER_CITIZEN_ID, TYPE_CODE, TYPE_NAME, PER_SLIP_ID, PER_POS_ID, PRE_CODE, PRE_NAME,
+              PER_NAME_TH, PER_NAME_EN, PER_TAX_ID, PER_PVDF_APP, PER_PVDF_APP_D, PER_PVDF_QUIT, PER_PVDF_QUIT_D,
+              PER_FUND_TYPE, PER_SAVE_RATE, PER_SSO_PAYMENT, PER_FUND_TEACHER, PER_FUND_ASSTEACHER, PER_SSO_ID,
+              PER_PASSPORT_NO, PER_PASSPORT_START_D, PER_PASSPORT_EXPIRE_D, POSC_NAME, PER_FAC_C,
+              FAC_NAME, PER_SALARY, PER_HOLD_SALARY, PER_SOURCE_MONEY,
+              PER_POSITION_MONEY, PER_POSITION_PAY, PER_POSITION_MONEY_EX, PER_POSITION_PAY_EX, PER_PROJECT,
+              CREATED_DATE, CREATED_BY, UPDATED_DATE, UPDATED_BY,
+              NOTE_PVD, HIST_BY, FLAG
+            ) VALUES (
+              :perCitizenId, :typeCode, :typeName, :perSlipId, :perPosId, :preCode, :preName,
+              :perNameTh, :perNameEn, :perTaxId, :perPvdfApp, 
+              TO_DATE(:perPvdfAppD, 'YYYY-MM-DD'), 
+              :perPvdfQuit, 
+              TO_DATE(:perPvdfQuitD, 'YYYY-MM-DD'),
+              :perFundType, :perSaveRate, :perSsoPayment, :perFundTeacher, :perFundAssteacher, :perSsoId,
+              :perPassportNo, 
+              TO_DATE(:perPassportStartD, 'YYYY-MM-DD'), 
+              TO_DATE(:perPassportExpireD, 'YYYY-MM-DD'), 
+              :poscName, :perFacC,
+              :facName, :perSalary, :perHoldSalary, :perSourceMoney,
+              :perPositionMoney, :perPositionPay, :perPositionMoneyEx, :perPositionPayEx, :perProject,
+              TO_DATE(:thaiNow, 'YYYY-MM-DD HH24:MI:SS'), :createdBy, TO_DATE(:thaiNow, 'YYYY-MM-DD HH24:MI:SS'), :createdBy,
+              :notePvd, :histBy, 'I'
+            )
+          `;
+          await connection.execute(
+            sqlHist,
+            { ...binds, thaiNow: thaiNow, notePvd: finalNotePvd, histBy: actionUser },
+            { outFormat: oracledb.OUT_FORMAT_OBJECT }
+          );
         }
 
-        return res.status(201).json({
+        return {
           success: true,
           message: "บันทึกข้อมูลบุคลากรเข้าสู่ระบบฐานข้อมูลสถาบันเรียบร้อยแล้ว",
-        });
-      } else {
-        if (!res.headersSent) {
-          return res.status(400).json({
-            success: false,
-            message: "ไม่สามารถบันทึกข้อมูลได้ กรุณาตรวจสอบข้อมูลอีกครั้ง",
-          });
-        }
-      }
+        };
+      });
+
+      return res.status(201).json(result);
     } catch (error) {
       console.error("Insert Full API Unexpected Error:", error);
       if (!res.headersSent) {
-        return res.status(500).json({ success: false, txt: error.message });
+        return res.status(500).json({ success: false, message: error.message || "ไม่สามารถบันทึกข้อมูลได้" });
       }
     }
   },
@@ -297,8 +296,8 @@ const personnelManageController = {
           { outFormat: oracledb.OUT_FORMAT_OBJECT }
         );
 
-        if (!resultBackup) {
-          throw new Error("ไม่สามารถบันทึกประวัติ Backup ก่อนการแก้ไขข้อมูลได้");
+        if (!resultBackup || resultBackup.rowsAffected === 0) {
+          throw new Error("ไม่สามารถบันทึกประวัติ Backup ก่อนการแก้ไขข้อมูลได้ หรือไม่พบข้อมูลตามที่ระบุ");
         }
 
         // อัปเดตข้อมูลหลักในตารางหลัก
@@ -418,7 +417,7 @@ const personnelManageController = {
         return res.status(400).json({ success: false, message: "กรุณาระบุหมายเหตุการลบข้อมูล (NOTE_DEL)" });
       }
 
-      const finalNoteDel = String(noteDel).trim().substring(0, 20);
+      const finalNoteDel = parseStrBytes(noteDel, 20);
       const actionUser = parseStr(req.decoded?.client_id || req.body?.updatedBy || req.body?.UPDATED_BY || req.query?.updatedBy || 'SYSTEM', 50);
 
       const thaiNow = getThaiDateTimeStr();
@@ -455,8 +454,8 @@ const personnelManageController = {
           { outFormat: oracledb.OUT_FORMAT_OBJECT }
         );
 
-        if (!resultBackup) {
-          throw new Error("ไม่สามารถบันทึกประวัติ Backup ก่อนการลบข้อมูลได้");
+        if (!resultBackup || resultBackup.rowsAffected === 0) {
+          throw new Error("ไม่สามารถบันทึกประวัติ Backup ก่อนการลบข้อมูลได้ หรือไม่พบข้อมูลตามที่ระบุ");
         }
 
         // ลบข้อมูลจริงออกจากตารางหลัก

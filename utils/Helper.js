@@ -9,11 +9,11 @@ const Helper = {
         return moment().add(day, Define.DAYS).valueOf();
     },
     //@return token:String
-    getJWTtoken: (client_id, ACCESS_SECRET) => {
-        if (expires) {
-            return jwt.sign({ client_id: client_id }, ACCESS_SECRET, { expiresIn: Define.EXPIRE_TIME });
+    getJWTtoken: (client_id, ACCESS_SECRET, expiresIn = Define.EXPIRE_TIME) => {
+        if (expiresIn) {
+            return jwt.sign({ client_id: client_id }, ACCESS_SECRET, { expiresIn: expiresIn });
         } else {
-            return jwt.sign({ client_id: client_id }, ACCESS_SECRET.ACCESS_SECRET);
+            return jwt.sign({ client_id: client_id }, ACCESS_SECRET);
         }
     },
 

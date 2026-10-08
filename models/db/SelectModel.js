@@ -73,7 +73,6 @@ static async findAll(res, sql, data = {}) {
         await connection.close();
       } catch (closeErr) { 
         console.error("DB connection close error:", closeErr.message); 
-        return null;
       }
     }
   }

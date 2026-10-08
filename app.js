@@ -19,19 +19,32 @@ app.use(bodyParser.urlencoded({ limit: "50mb", extended: true }));
 'use strict';
 Error.stackTraceLimit = 50;
 
-//enable cros
-var corsOptions = { origin: "*", credentials: true };
-app.use(cors(corsOptions));
-app.use(cors({ origin: ["http://localhost"], credentials: true }))
-app.use(cors({ origin: ["https://uat3.ru.ac.th"], credentials: true }))
+// CORS configuration (Supporting localhost and credentials cleanly)
+const allowedOrigins = [
+  'http://localhost:4200',
+  'http://localhost:3000',
+  'http://localhost',
+  'http://127.0.0.1:4200',
+  'https://uat3.ru.ac.th'
+];
+
 app.use(cors({
-  origin: "*", credentials: true,
+  origin: function (origin, callback) {
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.includes(origin) || /^http:\/\/localhost(:\d+)?$/.test(origin)) {
+      return callback(null, true);
+    }
+    return callback(null, true);
+  },
+  credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
 }));
 
-app.options('*', cors()); // ให้ OPTIONS ผ่าน
-app.use(helmet());
+app.options('*', cors());
+app.use(helmet({
+  crossOriginResourcePolicy: { policy: "cross-origin" }
+}));
 
 /* const allowedOrigins = [
   'http://localhost:4200',
