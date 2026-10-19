@@ -27,7 +27,7 @@ const personnelSearchController = {
           f.FAC_NAME2,
           proj.PRO_NAME,
           sm.SM_NAME
-        FROM PERSON_PAYROLL_OUT p
+        FROM PERSON01.PERSON_PAYROLL_OUT p
         LEFT JOIN PRENAME_CODE pre ON p.PRE_CODE = pre.PRE_CODE
         LEFT JOIN PERSONTYPE t ON p.TYPE_CODE = t.TYPE_CODE
         LEFT JOIN FACULTY_CODE f ON p.PER_FAC_C = f.FAC_CODE
